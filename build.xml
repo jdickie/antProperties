@@ -1,0 +1,31 @@
+<project name="antProperties" default="setProperties" basedir=".">
+
+    <property name="environmentsDir" value="${basedir}/conf/environments"/>
+    <property name="hostDir" value="${basedir}/conf/host"/>
+    <property name="defaultProps" value="${environmentsDir}/dev.properties"/>
+    <property name="keyProps" value="${basedir}/conf/template.properties"/>
+    <property name="buildProps" value="${basedir}/build.properties"/>
+    <exec executable="hostname" outputproperty="env"/>
+
+    <!-- Gets passed in via:
+    ant -Dbuild.env="dev"
+    -->
+    <condition property="build.env" value="${build.env}" else="dev">
+        <isset property="build.env"/>
+    </condition>
+
+    <target name="clean">
+        <delete file="${buildProps}"/>
+    </target>
+
+    <target name="copyProperties" depends="clean">
+        <filterset id="host-properties" begintoken="%" endtoken="*">
+            <filtersfile file="${environmentsDir}/${build.env}.properties"/>
+            <filtersfile file="${hostDir}/${env}.properties"/>
+        </filterset>
+        <echo message="Created filterset for ${env}.properties"/>
+        <copy tofile="${buildProps}" file="${keyProps}" overwrite="true" failonerror="true" filtering="true">
+            <filterset refId="host-properties"/>
+        </copy>
+    </target>
+</project>
